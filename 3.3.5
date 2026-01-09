@@ -1,0 +1,41 @@
+name: TrinityCore-3.3.5-Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout 3.3.5 branch
+      uses: actions/checkout@v3
+      with:
+        ref: 3.3.5
+
+    - name: Install Dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
+
+    - name: Configure CMake
+      run: |
+        cmake -B build -S . -A x64 -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTOOLS=1 -DSCRIPTS=1
+
+    - name: Build TrinityCore
+      run: |
+        cmake --build build --config RelWithDebInfo --parallel
+
+    - name: Prepare Artifact
+      run: |
+        mkdir artifact
+        copy build/bin/RelWithDebInfo/*.exe artifact/
+        copy build/bin/RelWithDebInfo/*.dll artifact/
+        copy build/bin/RelWithDebInfo/*.pdb artifact/
+        copy build/etc/*.conf.dist artifact/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: TrinityCore-3.3.5-Build
+        path: artifact
