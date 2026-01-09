@@ -1,1 +1,32 @@
 
+name: TrinityCore Windows Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
+
+    - name: Configure CMake
+      run: cmake -B build -S . -A x64 -DWITH_WARNINGS=0 -DTOOLS=1
+
+    - name: Build
+      run: cmake --build build --config Release --parallel
+
+    - name: Upload binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: TrinityCore-Binaries
+        path: build/bin/Release
