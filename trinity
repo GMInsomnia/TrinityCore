@@ -1,0 +1,34 @@
+name: Windows x64 Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Изтегли кода
+        uses: actions/checkout@v3
+
+      - name: Инсталирай зависимостите
+        run: |
+          choco install visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools" -y
+          choco install cmake -y
+
+      - name: Генерирай CMake проект
+        run: |
+          cmake -B build -S . -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Компилирай TrinityCore
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Качи готовия Windows билд
+        uses: actions/upload-artifact@v3
+        with:
+          name: TrinityCore-Windows-x64
+          path: |
+            build/bin/Release/worldserver.exe
+            build/bin/Release/authserver.exe
+            build/bin/Release/
